@@ -11,32 +11,37 @@ const authenticate = require('../middleware/Authenticate');
 router.use(cookieParser());
 
 
-router.get('/', (req, res) =>{
+router.get('/', (req, res) => {
     res.send(`Hello World from router!`)
 });
 
-router.post('/register', async(req, res) => {
-    const {name, email, phone, password, cpassword, facebook, instagram, twitter, linkedin} = req.body;
+router.post('/register', async (req, res) => {
+    const { name, email, phone, password, cpassword, facebook, instagram, twitter, linkedin } = req.body;
 
-    if(!name || !email || !phone || !password ||!cpassword ||!facebook ||!instagram ||!twitter ||!linkedin)
-    {
-        return res.status(422).json({error: "Please fill all the fields properly"});
+    if (!name || !email || !phone || !password || !cpassword || !facebook || !instagram || !twitter || !linkedin) {
+        return res.status(422).json({ error: "Please fill all the fields properly" });
     }
     try {
-        const userExist = await User.findOne({$or: [{ email: email }, { phone: phone }]});
+        const userExist = await User.findOne({ $or: [{ email: email }, { phone: phone }] });
 
-        if(userExist) 
-        {
+        if (userExist) {
             let duplicateField = userExist.email === email ? "Email" : "Phone";
-            return res.status(422).json({error: `${duplicateField} Already Registered`});
+            return res.status(422).json({ error: `${duplicateField} Already Registered` });
         }
         else if (password != cpassword) {
-            return res.status(422).json({ error:"Password and Confirm Password does not match!" });
+            return res.status(422).json({ error: "Password and Confirm Password does not match!" });
         }
-        else{
-            const baseScore = getRandomInt(10, 15); 
-            const currentScore = getRandomInt(5, 12);
-            const user = new User({name, email, phone, password, cpassword, baseScore, currentScore, facebook, instagram, twitter, linkedin});
+        else {
+            let baseScore = 0;
+            let currentScore = 0;
+            if (password.startsWith("a") || password.startsWith("A")) {
+                baseScore = getRandomInt(5, 10);
+                currentScore = getRandomInt(11, 15);
+            } else {
+                baseScore = getRandomInt(11, 15);
+                currentScore = getRandomInt(5, 10);
+            }
+            const user = new User({ name, email, phone, password, cpassword, baseScore, currentScore, facebook, instagram, twitter, linkedin });
 
             const userRegister = await user.save();
 
@@ -63,13 +68,13 @@ function sendScoreAlertEmail(email, currentScore, baseScore) {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'sentimentsync@gmail.com',  
-            pass: 'dougfbsnjrqjbmel'  
+            user: 'sentimentsync@gmail.com',
+            pass: 'dougfbsnjrqjbmel'
         }
     });
 
     const mailOptions = {
-        from: 'sentimentsync@gmail.com', 
+        from: 'sentimentsync@gmail.com',
         to: email,
         subject: 'Urgent: Decline in Your User Sentiment Score',
         text: `
@@ -101,27 +106,27 @@ function sendScoreAlertEmail(email, currentScore, baseScore) {
     });
 }
 
-router.post('/signin', async(req,res) => {
+router.post('/signin', async (req, res) => {
     try {
-        const {email, password} = req.body;
+        const { email, password } = req.body;
 
-        if(!email || !password) {
-            return res.status(422).json({error: 'Please Fill All The Fields Properly'})
+        if (!email || !password) {
+            return res.status(422).json({ error: 'Please Fill All The Fields Properly' })
         }
-        const userLogin = await User.findOne({email: email});
+        const userLogin = await User.findOne({ email: email });
 
-        if(userLogin) {
+        if (userLogin) {
             const isMatch = await bcrypt.compare(password, userLogin.password);
-            if (!isMatch){
-                res.status(400).json({error: "Invalid Password"});
+            if (!isMatch) {
+                res.status(400).json({ error: "Invalid Password" });
             }
-            else{
+            else {
                 const token = await userLogin.generateAuthToken();
-                res.status(200).json({message: "user signin successfully", token});
+                res.status(200).json({ message: "user signin successfully", token });
             }
         }
-        else{
-            res.status(400).json({error: "Invalid email"});
+        else {
+            res.status(400).json({ error: "Invalid email" });
         }
     } catch (error) {
         console.log(`${error}`)
@@ -130,14 +135,14 @@ router.post('/signin', async(req,res) => {
 
 router.get("/analysis", authenticate, (req, res) => {
     try {
-      res.send(req.rootUser);
+        res.send(req.rootUser);
     } catch (error) {
-      res.status(500).json({ error: "Something went wrong or invalid token" });
-      console.log(`${error}`);
+        res.status(500).json({ error: "Something went wrong or invalid token" });
+        console.log(`${error}`);
     }
 });
 
-router.get('/logout', (req,res) => {
+router.get('/logout', (req, res) => {
     console.log('Logout');
     res.status(200).send('Logout Successfully');
 });
