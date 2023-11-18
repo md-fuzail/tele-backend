@@ -34,8 +34,8 @@ router.post('/register', async(req, res) => {
             return res.status(422).json({ error:"Password and Confirm Password does not match!" });
         }
         else{
-            const baseScore = getRandomInt(5, 10); 
-            const currentScore = getRandomInt(2, 15);
+            const baseScore = getRandomInt(10, 15); 
+            const currentScore = getRandomInt(5, 12);
             const user = new User({name, email, phone, password, cpassword, baseScore, currentScore, facebook, instagram, twitter, linkedin});
 
             const userRegister = await user.save();
