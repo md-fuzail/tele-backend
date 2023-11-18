@@ -9,7 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 
 app.use(cookieParser());
-app.use(cors({credentials: true}));
+app.use(cors({credentials: true, origin:"https://sentimentsync.vercel.app/"}));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
